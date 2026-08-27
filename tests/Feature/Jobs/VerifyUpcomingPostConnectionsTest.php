@@ -22,6 +22,17 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
+/**
+ * Whether a logged query is a plain select against $table, regardless of how the
+ * driver quotes identifiers — PostgreSQL emits "post_platforms", MySQL emits
+ * `post_platforms`. Matching the quoted form directly makes these listeners
+ * silently never fire on MySQL, so the race they simulate goes untested.
+ */
+function verifyUpcomingSelectsFrom(string $sql, string $table): bool
+{
+    return str_starts_with(str_replace(['"', '`'], '', $sql), "select * from {$table}");
+}
+
 test('marks the account expired and queues a notification when verify throws TokenExpiredException', function () {
     Mail::fake();
 
@@ -946,7 +957,7 @@ test('a post deleted between the main query and the eager-loaded post relation r
     // \"post_platforms\" where ...)", which contains but doesn't start with
     // this prefix, so those never trip the listener.
     $listener = function ($query) use ($doomedPost) {
-        if (str_starts_with($query->sql, 'select * from "post_platforms"')) {
+        if (verifyUpcomingSelectsFrom($query->sql, 'post_platforms')) {
             Post::where('id', $doomedPost->id)->delete();
         }
     };
@@ -1090,7 +1101,7 @@ test('does not verify or warn about an account paused mid-run, after atRiskPostP
     // but before the per-account loop reaches it, reproducing the race the
     // fresh() re-check at the top of each account's iteration exists to close.
     $listener = function ($query) use ($account) {
-        if (str_starts_with($query->sql, 'select * from "post_platforms"')) {
+        if (verifyUpcomingSelectsFrom($query->sql, 'post_platforms')) {
             $account->update(['is_active' => false]);
         }
     };
@@ -1132,7 +1143,7 @@ test('does not warn about an already token_expired account paused mid-run, after
     // reaching it shouldn't get warned about a connection its owner
     // deliberately paused, even though it's already broken.
     $listener = function ($query) use ($account) {
-        if (str_starts_with($query->sql, 'select * from "post_platforms"')) {
+        if (verifyUpcomingSelectsFrom($query->sql, 'post_platforms')) {
             $account->update(['is_active' => false]);
         }
     };
@@ -1179,7 +1190,7 @@ test('does not crash or warn when the account is hard-deleted mid-run, after atR
     // needs the account to still resolve as non-null going into the loop,
     // then disappear before the guard's own re-fetch runs.
     $listener = function ($query) use ($account) {
-        if (str_starts_with($query->sql, 'select * from "social_accounts"')) {
+        if (verifyUpcomingSelectsFrom($query->sql, 'social_accounts')) {
             $account->delete();
         }
     };
