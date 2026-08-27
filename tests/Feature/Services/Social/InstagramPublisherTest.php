@@ -922,7 +922,9 @@ test('instagram publisher keeps a published media id when the permalink request 
         'url' => null,
     ]);
 
-    expect($this->postPlatform->fresh()->error_context['instagram_workflow'] ?? null)->toBe([
+    // toEqual, not toBe: MySQL normalises JSON object key order, so an identity
+    // comparison would depend on how the driver chose to store the object.
+    expect($this->postPlatform->fresh()->error_context['instagram_workflow'] ?? null)->toEqual([
         'stage' => 'final_container',
         'container_id' => 'container-123',
         'media_id' => 'media-123456789',
@@ -1272,7 +1274,9 @@ test('instagram publisher checkpoints the media id before fetching the permalink
         'url' => null,
     ]);
 
-    expect($this->postPlatform->fresh()->error_context['instagram_workflow'] ?? null)->toBe([
+    // toEqual, not toBe: MySQL normalises JSON object key order, so an identity
+    // comparison would depend on how the driver chose to store the object.
+    expect($this->postPlatform->fresh()->error_context['instagram_workflow'] ?? null)->toEqual([
         'stage' => 'final_container',
         'container_id' => 'container-123',
         'media_id' => 'media-123456789',
