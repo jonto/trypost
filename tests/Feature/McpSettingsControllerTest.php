@@ -129,7 +129,8 @@ it('disconnects a client when its access token expired but its refresh token is 
         ->assertSessionHas('flash.success');
 
     expect($token->fresh()->revoked)->toBeTrue()
-        ->and(DB::table('oauth_refresh_tokens')->where('id', $refreshTokenId)->value('revoked'))->toBeTrue();
+        // Raw query-builder read: cast explicitly, the driver decides the shape.
+        ->and((bool) DB::table('oauth_refresh_tokens')->where('id', $refreshTokenId)->value('revoked'))->toBeTrue();
 });
 
 it('lists a client when its access token expired but its refresh token is live', function (): void {
