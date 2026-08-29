@@ -662,7 +662,6 @@ it('attaches an existing workspace asset to a post', function () {
     expect($this->post->fresh()->media)->toHaveCount(1)
         ->and(data_get($this->post->fresh()->media, '0.id'))->toBe($asset->id)
         ->and(data_get($this->post->fresh()->media, '0.size'))->toBe(12345)
-        // toEqual, not toBe: MySQL normalises JSON object key order.
         ->and(data_get($this->post->fresh()->media, '0.meta'))->toEqual([
             'width' => 1920,
             'height' => 1080,

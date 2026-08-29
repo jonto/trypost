@@ -23,14 +23,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 /**
- * Whether a logged query is a plain select against $table, regardless of how the
- * driver quotes identifiers — PostgreSQL emits "post_platforms", MySQL emits
- * `post_platforms`. Matching the quoted form directly makes these listeners
- * silently never fire on MySQL, so the race they simulate goes untested.
+ * Whether a logged query is a plain select against $table, asking the connection
+ * how it quotes identifiers rather than assuming a driver.
  */
 function verifyUpcomingSelectsFrom(string $sql, string $table): bool
 {
-    return str_starts_with(str_replace(['"', '`'], '', $sql), "select * from {$table}");
+    return str_starts_with($sql, 'select * from '.DB::getQueryGrammar()->wrapTable($table));
 }
 
 test('marks the account expired and queues a notification when verify throws TokenExpiredException', function () {
@@ -954,8 +952,8 @@ test('a post deleted between the main query and the eager-loaded post relation r
     // str_starts_with (not str_contains) deliberately excludes the
     // recentlyWarnedAbout()/recentlyDisconnected() exists() subqueries —
     // Laravel compiles ->exists() as "select exists(select * from
-    // \"post_platforms\" where ...)", which contains but doesn't start with
-    // this prefix, so those never trip the listener.
+    // post_platforms where ...)", which contains but doesn't start with this
+    // prefix, so those never trip the listener.
     $listener = function ($query) use ($doomedPost) {
         if (verifyUpcomingSelectsFrom($query->sql, 'post_platforms')) {
             Post::where('id', $doomedPost->id)->delete();

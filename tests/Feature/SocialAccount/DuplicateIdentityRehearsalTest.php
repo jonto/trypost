@@ -9,9 +9,7 @@ use App\Models\Post;
 use App\Models\PostPlatform;
 use App\Models\SocialAccount;
 use App\Models\Workspace;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * A rehearsal rather than a scenario test: build a deliberately messy database
@@ -26,18 +24,7 @@ beforeEach(function () {
         'migrations/2026_08_21_130941_add_workspace_platform_identity_unique_to_social_accounts_table.php',
     );
 
-    // social_accounts.workspace_id has a foreign key, and the composite unique
-    // index is the only one covering it (as its leftmost prefix). MySQL refuses
-    // to drop the sole index backing a foreign key — SQLSTATE[HY000] 1553 — so
-    // give the constraint another index to rest on first. PostgreSQL has no such
-    // requirement and simply carries the extra index.
-    Schema::table('social_accounts', function (Blueprint $table) {
-        $table->index('workspace_id', 'social_accounts_workspace_id_fk_backing');
-    });
-
-    Schema::table('social_accounts', function (Blueprint $table) {
-        $table->dropUnique('social_accounts_workspace_platform_identity_unique');
-    });
+    $this->migration->down();
 });
 
 /**

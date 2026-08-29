@@ -61,8 +61,6 @@ it('renames the automation from settings without wiping the graph', function () 
 
     $automation->refresh();
     expect($automation->name)->toBe('Renamed flow');
-    // toEqual, not toBe: MySQL normalises JSON object key order, so the graph
-    // round-trips with the same content in a different key order.
     expect($automation->nodes)->toEqual($originalNodes);
 });
 

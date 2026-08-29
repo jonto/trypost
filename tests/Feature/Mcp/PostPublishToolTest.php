@@ -227,7 +227,6 @@ test('publish post scheduled does not dispatch immediately', function () {
     $response = TryPostServer::actingAs($this->user)
         ->tool(PublishPostTool::class, [
             'post_id' => $post->id,
-            // Inside MySQL's TIMESTAMP range, which ends 2038-01-19.
             'scheduled_at' => '2037-12-31T15:30:00Z',
         ]);
 

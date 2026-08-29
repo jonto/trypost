@@ -143,8 +143,6 @@ test('create post with content and date', function () {
     $response = TryPostServer::actingAs($this->user)
         ->tool(CreatePostTool::class, [
             'content' => 'My new post',
-            // Inside MySQL's TIMESTAMP range, which ends 2038-01-19; still far
-            // enough out to read as "far future" for scheduling assertions.
             'scheduled_at' => '2037-12-31T15:30:00Z',
         ]);
 

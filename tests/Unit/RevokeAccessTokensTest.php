@@ -31,8 +31,6 @@ test('revokes access tokens and their refresh tokens', function () {
     RevokeAccessTokens::execute($token);
 
     expect(AccessToken::query()->find($token->id)->revoked)->toBeTrue();
-    // Raw query-builder read: no Eloquent cast applies, so the driver's native
-    // boolean representation leaks through (bool on Postgres, 1 on MySQL).
     expect((bool) DB::table('oauth_refresh_tokens')->where('id', $refreshId)->value('revoked'))->toBeTrue();
 });
 
