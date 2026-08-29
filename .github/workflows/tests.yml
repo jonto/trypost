@@ -30,13 +30,11 @@ jobs:
             image: postgres:16
             port: '5432'
             username: postgres
-            health: '--health-cmd="pg_isready"'
           - name: MySQL
             connection: mysql
             image: mysql:8.4
             port: '3306'
             username: root
-            health: '--health-cmd="mysqladmin ping -h 127.0.0.1 -u root -ppassword"'
 
     env:
       DB_CONNECTION: ${{ matrix.connection }}
@@ -53,11 +51,13 @@ jobs:
           MYSQL_DATABASE: trypost_test
         ports:
           - ${{ matrix.port }}/tcp
+        # Both images run their init phase without networking, so an open port
+        # is the point either engine starts accepting connections.
         options: >-
-          ${{ matrix.health }}
-          --health-interval=10s
+          --health-cmd="bash -c 'echo > /dev/tcp/127.0.0.1/${{ matrix.port }}'"
+          --health-interval=5s
           --health-timeout=5s
-          --health-retries=10
+          --health-retries=20
 
       redis:
         image: redis:7
